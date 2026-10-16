@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مولّد الباركود و QR Code</title>
+
+<!-- مكتبة QRCode الموثوقة -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<!-- مكتبة الباركود -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<!-- مكتبة PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 700px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 30px;
+    margin-top: 20px;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 25px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95rem;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+  }
+
+  input[type="text"]:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102,126,234,0.15);
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .radio-group label {
+    flex: 1;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .radio-group input[type="radio"] { display: none; }
+
+  .radio-group label:has(input:checked) {
+    border-color: #667eea;
+    background: #f0f3ff;
+    color: #667eea;
+  }
+
+  .colors-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .color-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+  }
+
+  input[type="color"] {
+    width: 50px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: none;
+  }
+
+  input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #fafafa;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #fff;
+    margin-top: 10px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    box-shadow: 0 6px 20px rgba(17,153,142,0.4);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #ee0979, #ff6a00);
+    box-shadow: 0 6px 20px rgba(238,9,121,0.4);
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+
+  .output-area {
+    display: none;
+    margin-top: 25px;
+    padding: 20px;
+    background: #f8f9ff;
+    border-radius: 16px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .output-area.show { display: block; }
+
+  #preview {
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    background: #fff;
+    padding: 10px;
+  }
+
+  .download-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  footer {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 15px 25px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    letter-spacing: 0.5px;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 500px) {
+    .container { padding: 20px; }
+    h1 { font-size: 1.4rem; }
+    .colors-row { grid-template-columns: 1fr; }
+    .download-btns { grid-template-columns: 1fr; }
+    footer { font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎯 مولّد الباركود و QR Code</h1>
+
+  <div class="form-group">
+    <label>📝 النص أو الرقم</label>
+    <input type="text" id="dataInput" placeholder="اكتب النص أو الرقم هنا..." />
+  </div>
+
+  <div class="form-group">
+    <label>🔘 اختر النوع</label>
+    <div class="radio-group">
+      <label>
+        <input type="radio" name="codeType" value="QR" checked />
+        <span>🔳 QR Code</span>
+      </label>
+      <label>
+        <input type="radio" name="codeType" value="BAR" />
+        <span>📊 Barcode</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-group" id="qrOptions">
+    <label>🎨 الألوان المخصصة</label>
+    <div class="colors-row">
+      <div class="color-input">
+        <input type="color" id="fgColor" value="#000000" />
+        <span>اللون الأمامي</span>
+      </div>
+      <div class="color-input">
+        <input type="color" id="bgColor" value="#ffffff" />
+        <span>اللون الخلفي</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-group" id="logoOption">
+    <label>🖼️ الشعار في المنتصف (اختياري)</label>
+    <input type="file" id="logoInput" accept="image/*" />
+  </div>
+
+  <button class="btn btn-primary" onclick="generate()">🎯 توليد</button>
+
+  <div class="output-area" id="outputArea">
+    <!-- Canvas نهائي للعرض والتحميل -->
+    <img id="preview" alt="النتيجة" />
+
+    <div class="download-btns">
+      <button class="btn btn-success" onclick="downloadPNG()">💾 تحميل PNG</button>
+      <button class="btn btn-danger" onclick="downloadPDF()">📄 تحميل PDF</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © جميع الحقوق محفوظة للمهندس مينا خيرت
+</footer>
+
+<!-- عناصر مخفية للتوليد -->
+<div id="hiddenArea" style="position:absolute; left:-99999px; top:0;"></div>
+<canvas id="workCanvas" class="hidden"></canvas>
+<canvas id="barcodeCanvas" class="hidden"></canvas>
+
+<script>
+  // إظهار/إخفاء الخيارات حسب النوع
+  document.querySelectorAll('input[name="codeType"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const isQR = e.target.value === 'QR';
+      document.getElementById('qrOptions').style.display = isQR ? 'block' : 'none';
+      document.getElementById('logoOption').style.display = isQR ? 'block' : 'none';
+    });
+  });
+
+  let generatedImageData = null;
+
+  // ================== توليد QR ==================
+  function generateQR(data, fg, bg, logoFile) {
+    return new Promise((resolve, reject) => {
+      const hiddenArea = document.getElementById('hiddenArea');
+      hiddenArea.innerHTML = ''; // نظّف
+
+      // إنشاء div لتوليد QR جواه
+      const qrDiv = document.createElement('div');
+      hiddenArea.appendChild(qrDiv);
+
+      // توليد QR باستخدام qrcodejs
+      new QRCode(qrDiv, {
+        text: data,
+        width: 600,
+        height: 600,
+        colorDark: fg,
+        colorLight: bg,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      // انتظر لحد ما الـ canvas يظهر
+      setTimeout(() => {
+        const qrCanvas = qrDiv.querySelector('canvas');
+        if (!qrCanvas) {
+          // لو المستعرض عمله كـ img (بعض النسخ القديمة)
+          const qrImg = qrDiv.querySelector('img');
+          if (qrImg) {
+            const workCanvas = document.getElementById('workCanvas');
+            workCanvas.width = 600;
+            workCanvas.height = 600;
+            const ctx = workCanvas.getContext('2d');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, 600, 600);
+            ctx.drawImage(qrImg, 0, 0, 600, 600);
+            addLogoAndFinish(workCanvas, logoFile, resolve, reject);
+            return;
+          }
+          reject(new Error('فشل توليد QR'));
+          return;
+        }
+
+        const workCanvas = document.getElementById('workCanvas');
+        workCanvas.width = 600;
+        workCanvas.height = 600;
+        const ctx = workCanvas.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 600, 600);
+        ctx.drawImage(qrCanvas, 0, 0, 600, 600);
+
+        addLogoAndFinish(workCanvas, logoFile, resolve, reject);
+      }, 150);
+    });
+  }
+
+  // إضافة الشعار وإنهاء العملية
+  function addLogoAndFinish(canvas, logoFile, resolve, reject) {
+    if (!logoFile) {
+      resolve(canvas.toDataURL('image/png'));
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        const qrSize = canvas.width;
+        const logoSize = qrSize * 0.22; // 22% من الحجم
+        const x = (qrSize - logoSize) / 2;
+        const y = (qrSize - logoSize) / 2;
+
+        // خلفية بيضاء مستديرة للشعار
+        const pad = 10;
+        const r = 15;
+        ctx.fillStyle = '#ffffff';
+        roundRect(ctx, x - pad, y - pad, logoSize + pad * 2, logoSize + pad * 2, r);
+        ctx.fill();
+
+        // ارسم الشعار
+        ctx.drawImage(img, x, y, logoSize, logoSize);
+
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('فشل تحميل الشعار'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('فشل قراءة الشعار'));
+    reader.readAsDataURL(logoFile);
+  }
+
+  // رسم مستطيل بزوايا دائرية
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // ================== توليد الباركود ==================
+  function generateBarcode(data) {
+    return new Promise((resolve, reject) => {
+      try {
+        // SVG مؤقت
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        JsBarcode(svg, data, {
+          format: 'CODE128',
+          width: 3,
+          height: 120,
+          displayValue: true,
+          fontSize: 18,
+          margin: 15,
+          background: '#ffffff',
+          lineColor: '#000000'
+        });
+
+        // حوّل SVG لصورة
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.getElementById('barcodeCanvas');
+          canvas.width = img.width * 2 || 800;
+          canvas.height = img.height * 2 || 300;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => reject(new Error('فشل تحويل الباركود'));
+        img.src = url;
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  // ================== الدالة الرئيسية ==================
+  async function generate() {
+    const data = document.getElementById('dataInput').value.trim();
+    const type = document.querySelector('input[name="codeType"]:checked').value;
+
+    if (!data) {
+      alert('⚠️ من فضلك أدخل نصاً أو رقماً أولاً!');
+      return;
+    }
+
+    try {
+      let imageData;
+      if (type === 'QR') {
+        const fg = document.getElementById('fgColor').value;
+        const bg = document.getElementById('bgColor').value;
+        const logoFile = document.getElementById('logoInput').files[0];
+        imageData = await generateQR(data, fg, bg, logoFile);
+      } else {
+        imageData = await generateBarcode(data);
+      }
+
+      generatedImageData = imageData;
+      document.getElementById('preview').src = imageData;
+      document.getElementById('outputArea').classList.add('show');
+    } catch (err) {
+      console.error(err);
+      alert('❌ حدث خطأ: ' + err.message);
+    }
+  }
+
+  // ================== التحميل ==================
+  function downloadPNG() {
+    if (!generatedImageData) {
+      alert('⚠️ قم بتوليد الكود أولاً!');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = generatedImageData;
+    a.download = 'code.png';
+    a.click();
+  }
+
+  function downloadPDF() {
+    if (!generatedImageData) {
+      alert('⚠️ قم بتوليد الكود أولاً!');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    pdf.setFontSize(18);
+    pdf.text('Generated Code', pageW / 2, 30, { align: 'center' });
+
+    const imgW = 100;
+    const imgH = 100;
+    pdf.addImage(generatedImageData, 'PNG', (pageW - imgW) / 2, (pageH - imgH) / 2, imgW, imgH);
+
+    pdf.setFontSize(12);
+    const data = document.getElementById('dataInput').value.trim();
+    pdf.text('Data: ' + data, pageW / 2, (pageH + imgH) / 2 + 15, { align: 'center' });
+
+    pdf.save('code.pdf');
+  }
+</script>
+</body>
+</html>
